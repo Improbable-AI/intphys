@@ -7,12 +7,14 @@ import os
 
 
 def check_shape(masks_path, depth_path):
-
+    '''
+    checking shape consistency via mask comparison
+    '''
     imgs = []
     deps = []
 
     for idx, filename in enumerate(sorted(os.listdir(masks_path))):
-        if idx > 1 and idx < 98:
+        if idx > 1 and idx < 98: # only compare first 2 frames and last 2 frames
             pass
         im = Image.open(masks_path+filename)
         imgs.append(np.array(im.getdata()).reshape(288, 288))
@@ -30,6 +32,7 @@ def check_shape(masks_path, depth_path):
     depth_mask = np.multiply((deps[0] == deps[1]), (deps[-1] == deps[-2]))
     # use depth mask to disregard small area of folded panel as a potential mask
     for i in range(imgs.shape[0]):
+        # mask extraction: to make mask across frames consistent 
         unique, counts = np.unique(imgs[i][depth_mask], return_counts=True)
         unique = dict(zip(unique, counts))
         sorted_uniq = sorted(unique, key=unique.get)
@@ -37,6 +40,7 @@ def check_shape(masks_path, depth_path):
             new_imgs[i][imgs[i]==k] = j * 20
 
     consistent_count = 0
+    ## trakcing consistency across consecutive frames
     # abnormal = []
     # for i in range(1, new_imgs.shape[0]):
     #     if np.all(new_imgs[i] == new_imgs[i-1]):
@@ -55,11 +59,6 @@ def check_shape(masks_path, depth_path):
         consistent_count += 1
 
     return consistent_count
-    # print(masks_path)
-    # print("consistent_count: ", consistent_count)
-    # print("abnormal transitions: ", abnormal)
-
-
 
 
 
@@ -77,9 +76,3 @@ for dirname in dirs:
     print(dirname, score)
     with open('answer.txt', 'a') as ans:
         ans.write('%s %d\n' % (dirname[:-1], score))
-
-
-# for dirname in sorted(os.listdir(args.path)):
-#     masks_path = args.path + dirname + '/masks/'
-#     depth_path = args.path + dirname + '/depth/'
-#     check_shape(masks_path, depth_path)
